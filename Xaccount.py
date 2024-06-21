@@ -141,6 +141,7 @@ def click_button(driver,tag,attribu,attr_value):
 def find_tag(driver,tag,attribu,attr_value):
     from bs4 import BeautifulSoup
     import time
+    print(f"{time_now()} : find_tag(driver,{tag},{attribu},{attr_value})")
     # Nombre maximum de tentatives
     max_attempts = 10
     # "button"
@@ -332,18 +333,25 @@ def change_account(driver, user, passwd):
 def get_profile_link(driver):
     from bs4 import BeautifulSoup
     if find_tag(driver,"a","aria-label","Profile"):
-        # Récupérer le contenu HTML de la page
-        html_content = driver.page_source
-        # Créer un objet BeautifulSoup à partir du contenu HTML
-        soup = BeautifulSoup(html_content, "html.parser")
-        current_url = driver.current_url
-        profile_element = soup.find("a", {"aria-label": "Profile"})
-        if "href" in profile_element.attrs:
-            profile = profile_element["href"]
-            print(f"{time_now()} : Profile {profile[1:]} login.")
-            return profile[1:]
-        else:
-            print(f"{time_now()} : No Profile.")
+        try:
+            # Récupérer le contenu HTML de la page
+            html_content = driver.page_source
+            # Créer un objet BeautifulSoup à partir du contenu HTML
+            soup = BeautifulSoup(html_content, "html.parser")
+            current_url = driver.current_url
+            profile_element = soup.find("a", {"aria-label": "Profile"})
+            if "href" in profile_element.attrs:
+                profile = profile_element["href"]
+                print(f"{time_now()} : Profile {profile[1:]} login.")
+                return profile[1:]
+            else:
+                print(f"{time_now()} : No Profile.")
+                return None
+        except AttributeError:
+            print(f"{time_now()} : Erreur lors de l'analyse de l'élément du profil.")
+            return None
+        except Exception as e:
+            print(f"{time_now()} : Une erreur inattendue s'est produite :", e)
             return None
     else:
         print(f"{time_now()} : No Profile.")
@@ -413,23 +421,29 @@ def Account_menu(driver):
         print(f"{time_now()} : No Profile.")
         return False
 
-def account(driver):
+def select_account(accountno):
+    import random
+    accounts = ['yassingaza24', 'JDownTiflet2024', 'AssafKhair50428']
+    accounts_restants = [account for account in accounts if account != accountno]
+    account_choisi = random.choice(accounts_restants)
+    return account_choisi
+
+def account(url,driver):
     import time
+    print(f"{time_now()} : Change account.")
     while True:
         kill_chrome_process()
-        url = "https://x.com/home"
-        print(f"{time_now()} : Go to X home")
+        print(f"{time_now()} : Go to {url}")
         driver = google_chrome(url)    
         passwd = "123456789@Az"
+        user = "yassingaza24"
         print(f"{time_now()} : Check Profile.")
         profile_link = get_profile_link(driver)
-        user ="yassingaza24"
         skip = True
         result = False
         if profile_link:
             print(f"{time_now()} : Profile Exist")
-            if profile_link == user:
-                user = "JDownTiflet2024"
+            user = select_account(profile_link)
             if Account_menu(driver):
                 print(f"{time_now()} : Profile button Found")
                 if Account_cible(driver,user):
@@ -456,7 +470,7 @@ def account(driver):
         if profile_link != get_profile_link(driver):
             return driver
         
-if __name__ == "__main__":
-    url = "https://x.com/home"
-    driver = google_chrome(url)
-    driver = account(driver)
+# if __name__ == "__main__":
+#     url = "https://x.com/home"
+#     driver = google_chrome(url)
+#     driver = account(url,driver)

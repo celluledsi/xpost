@@ -80,7 +80,8 @@ def find_wrong(driver):
     from bs4 import BeautifulSoup
     from selenium import webdriver
     from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
-    try:      
+    try:
+        print(f"{time_now()} : find_wrong.")
         # Récupérer le contenu HTML de la page
         html_content = driver.page_source
 
@@ -90,7 +91,7 @@ def find_wrong(driver):
         span_element = soup.find('span', string='Something went wrong. Try reloading.')
 
         if span_element:
-            print(f"{time_now()} : Something went wrong. Try reloading.. Closing Chrome...")
+            print(f"{time_now()} : Something went wrong.")
             driver.quit()
             return True  # Retourner True pour indiquer que l'erreur a été trouvée
         else:
@@ -262,7 +263,7 @@ def socialContext(driver, post):
     print(f"{time_now()} : Aucun élément parent article avec aria-labelledby n'a été trouvé.")
     return False
     
-def save_links(link_list,file_path):
+def save_links(url,link_list,file_path):
     with open(file_path, 'a') as file:
         for link, datetime_str in link_list:
             full_url = f"https://x.com{link}"
@@ -271,9 +272,10 @@ def save_links(link_list,file_path):
             print()
             file.write(full_url + '\n')
         file.write(datetime_str + '\n')
+        file.write(f"X: {url}'\n'")
 
 #scrapp chrome and extract urls
-def scrap_compte(driver,file_path_save,days_threshold,index):
+def scrap_compte(url,driver,file_path_save,days_threshold,index):
     link_list = []
     scroll_echec = False
     if fetch_content(driver):
@@ -333,8 +335,8 @@ def scrap_compte(driver,file_path_save,days_threshold,index):
         wrong = find_wrong(driver)
         if wrong or scroll_echec:
             while wrong:
-                print(f"{time_now()} : find_wrong : {wrong}")
-                driver = account(driver)
+                print(f"{time_now()} : find wrong status : {wrong}")
+                driver = account(url,driver)
                 wrong = find_wrong(driver)
             print(f"{time_now()} : scroll_echec : {scroll_echec}")
             index -= 1
@@ -343,7 +345,7 @@ def scrap_compte(driver,file_path_save,days_threshold,index):
         
     ordre = index + 1 
     if saving:
-        save_links(link_list,file_path_save)
+        save_links(url,link_list,file_path_save)
     return ordre,driver
     
 #extract url from filname 
@@ -376,7 +378,7 @@ def open_url(file_name,days_threshold):
         except WebDriverException:
             driver = google_chrome(url)
         print(f"{time_now()} : Google Chrome : {url}")
-        index,driver = scrap_compte(driver,file_path_save,days_threshold,index)
+        index,driver = scrap_compte(url,driver,file_path_save,days_threshold,index)
         
     subprocess.run(['explorer.exe', file_path_save])
 
